@@ -22,14 +22,14 @@ extern "C" {
 #include "lvgl/lvgl.h"
 #endif
 
-#include "ili9488.h"
+#include "r61581.h"
 
 /*********************
  *      DEFINES
  *********************/
 
-#define MY_DISP_HOR_RES    ILI9488_X_RES
-#define MY_DISP_VER_RES    ILI9488_Y_RES
+#define MY_DISP_HOR_RES    LCD_HOR_RES
+#define MY_DISP_VER_RES    LCD_VER_RES
 
 /**********************
  *      TYPEDEFS

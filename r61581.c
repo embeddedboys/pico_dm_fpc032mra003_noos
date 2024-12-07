@@ -20,7 +20,7 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "pico/time.h"
-#define pr_fmt(fmt) "ili9488: " fmt
+#define pr_fmt(fmt) "r61581: " fmt
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -32,41 +32,41 @@
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
 
-#include "ili9488.h"
+#include "r61581.h"
 
 /*
- * ili9488 Command Table
+ * r61581 Command Table
  */
 
-#define DRV_NAME "ili9488"
+#define DRV_NAME "r61581"
 
 #define pr_debug printf
 
-struct ili9488_priv;
+struct r61581_priv;
 
 typedef unsigned int u32;
 typedef unsigned short u16;
 typedef unsigned char u8;
 
-struct ili9488_operations {
-    int (*init_display)(struct ili9488_priv *priv);
-    int (*reset)(struct ili9488_priv *priv);
-    int (*clear)(struct ili9488_priv *priv, u16 clear);
-    int (*blank)(struct ili9488_priv *priv, bool on);
-    int (*sleep)(struct ili9488_priv *priv, bool on);
-    int (*set_var)(struct ili9488_priv *priv);
-    int (*set_addr_win)(struct ili9488_priv *priv, int xs, int ys, int xe, int ye);
-    int (*set_cursor)(struct ili9488_priv *priv, int x, int y);
+struct r61581_operations {
+    int (*init_display)(struct r61581_priv *priv);
+    int (*reset)(struct r61581_priv *priv);
+    int (*clear)(struct r61581_priv *priv, u16 clear);
+    int (*blank)(struct r61581_priv *priv, bool on);
+    int (*sleep)(struct r61581_priv *priv, bool on);
+    int (*set_var)(struct r61581_priv *priv);
+    int (*set_addr_win)(struct r61581_priv *priv, int xs, int ys, int xe, int ye);
+    int (*set_cursor)(struct r61581_priv *priv, int x, int y);
 };
 
-struct ili9488_display {
+struct r61581_display {
     u32                     xres;
     u32                     yres;
     u32                     bpp;
     u32                     rotate;
 };
 
-struct ili9488_priv {
+struct r61581_priv {
     u8                      *buf;
 
     struct {
@@ -80,8 +80,8 @@ struct ili9488_priv {
     } gpio;
 
     /* device specific */
-    const struct ili9488_operations  *tftops;
-    struct ili9488_display           *display;
+    const struct r61581_operations  *tftops;
+    struct r61581_display           *display;
 } g_priv;
 
 #define ARRAY_SIZE(arr) (sizeof(arr)/sizeof(arr[0]))
@@ -91,7 +91,7 @@ struct ili9488_priv {
 extern int i80_pio_init(uint8_t db_base, uint8_t db_count, uint8_t pin_wr);
 extern int i80_write_buf_rs(void *buf, size_t len, bool rs);
 
-static void fbtft_write_gpio8_wr(struct ili9488_priv *priv, void *buf, size_t len)
+static void fbtft_write_gpio8_wr(struct r61581_priv *priv, void *buf, size_t len)
 {
     u8 data;
     int i;
@@ -141,7 +141,7 @@ static void fbtft_write_gpio8_wr(struct ili9488_priv *priv, void *buf, size_t le
     }
 }
 
-static void fbtft_write_gpio8_wr_rs(struct ili9488_priv *priv, void *buf, size_t len, bool rs)
+static void fbtft_write_gpio8_wr_rs(struct r61581_priv *priv, void *buf, size_t len, bool rs)
 {
     dm_gpio_set_value(priv->gpio.rs, rs);
     fbtft_write_gpio8_wr(priv, buf, len);
@@ -154,7 +154,7 @@ static void fbtft_write_gpio8_wr_rs(struct ili9488_priv *priv, void *buf, size_t
     #define write_buf_rs(p, b, l, r) fbtft_write_gpio8_wr_rs(p, b, l, r)
 #endif
 
-static int ili9488_write_reg(struct ili9488_priv *priv, int len, ...)
+static int r61581_write_reg(struct r61581_priv *priv, int len, ...)
 {
     u8 *buf = (u8 *)priv->buf;
     va_list args;
@@ -181,9 +181,9 @@ static int ili9488_write_reg(struct ili9488_priv *priv, int len, ...)
 }
 #define NUMARGS(...)  (sizeof((int[]){__VA_ARGS__}) / sizeof(int))
 #define write_reg(priv, ...) \
-    ili9488_write_reg(priv, NUMARGS(__VA_ARGS__), __VA_ARGS__)
+    r61581_write_reg(priv, NUMARGS(__VA_ARGS__), __VA_ARGS__)
 
-static int ili9488_reset(struct ili9488_priv *priv)
+static int r61581_reset(struct r61581_priv *priv)
 {
     dm_gpio_set_value(priv->gpio.reset, 1);
     mdelay(10);
@@ -195,56 +195,45 @@ static int ili9488_reset(struct ili9488_priv *priv)
 }
 
 
-static int ili9488_set_var(struct ili9488_priv *priv)
+static int r61581_set_var(struct r61581_priv *priv)
 {
     pr_debug("%s\n", __func__);
     return 0;
 }
 
-static int ili9488_init_display(struct ili9488_priv *priv)
+static int r61581_init_display(struct r61581_priv *priv)
 {
     pr_debug("%s, writing initial sequence...\n", __func__);
-    ili9488_reset(priv);
-    // dm_gpio_set_value(&priv->gpio.rd, 1);
-    // mdelay(150);
+    r61581_reset(priv);
+    dm_gpio_set_value(priv->gpio.rd, 1);
+    mdelay(150);
 
-    write_reg(priv, 0xf7, 0xa9, 0x51, 0x2c, 0x82);
+    write_reg(priv, 0xB0, 0x00);
+    write_reg(priv, 0xB3, 0x02, 0x00, 0x00, 0x00);
 
-    write_reg(priv, 0xc0, 0x11, 0x09);
+    /* Backlight control */
 
-    write_reg(priv, 0xc1, 0x41);
-
-    write_reg(priv, 0xc5, 0x00, 0x28, 0x80);
-
-    // write_reg(priv, 0xb1, 0xb0, 0x11);   // 60Hz
-    write_reg(priv, 0xb1, 0xd0, 0x14);  // 90Hz
-
-    write_reg(priv, 0xb4, 0x02);
-
-    write_reg(priv, 0xb6, 0x02, 0x22);
-
-    write_reg(priv, 0xb7, 0xc6);
-
-    write_reg(priv, 0xbe, 0x00, 0x04);
-
-    write_reg(priv, 0xe9, 0x00);
-
-    write_reg(priv, 0x36, 0x8 | (1 << 5) | (1 << 6));
-
-    write_reg(priv, 0x3a, 0x55);
-
-    write_reg(priv, 0xe0, 0x00, 0x07, 0x10, 0x09, 0x17, 0x0b, 0x41, 0x89, 0x4b, 0x0a, 0x0c, 0x0e, 0x18, 0x1b, 0x0f);
-
-    write_reg(priv, 0xe1, 0x00, 0x17, 0x1a, 0x04, 0x0e, 0x06, 0x2f, 0x45, 0x43, 0x02, 0x0a, 0x09, 0x32, 0x36, 0x0f);
+    write_reg(priv, 0xC0, 0x13, 0x3B, 0x00, 0x02, 0x00, 0x01, 0x00, 0x43);
+    write_reg(priv, 0xC1, 0x08, 0x16, 0x08, 0x08);
+    write_reg(priv, 0xC4, 0x11, 0x07, 0x03, 0x03);
+    write_reg(priv, 0xC6, 0x00);
+    write_reg(priv, 0xC8, 0x03, 0x03, 0x13, 0x5C, 0x03, 0x07, 0x14, 0x08, 0x00, 0x21, 0x08, 0x14, 0x07, 0x53, 0x0C, 0x13, 0x03, 0x03, 0x21, 0x00);
+    write_reg(priv, 0x0C, 0x55);
+    write_reg(priv, 0x36, (1 << 6) | (1 << 5));
+    write_reg(priv, 0x38);
+    write_reg(priv, 0x3A, 0x55);
+    write_reg(priv, 0xD0, 0x07, 0x07, 0x1D, 0x03);
+    write_reg(priv, 0xD1, 0x03, 0x30, 0x10);
+    write_reg(priv, 0xD2, 0x03, 0x14, 0x04);
 
     write_reg(priv, 0x11);
-    mdelay(60);
+    mdelay(10);
     write_reg(priv, 0x29);
 
     return 0;
 }
 
-static int ili9488_set_addr_win(struct ili9488_priv *priv, int xs, int ys, int xe,
+static int r61581_set_addr_win(struct r61581_priv *priv, int xs, int ys, int xe,
                                 int ye)
 {
     /* set column adddress */
@@ -258,7 +247,7 @@ static int ili9488_set_addr_win(struct ili9488_priv *priv, int xs, int ys, int x
     return 0;
 }
 
-static int ili9488_clear(struct ili9488_priv *priv, u16 clear)
+static int r61581_clear(struct r61581_priv *priv, u16 clear)
 {
     u32 width = priv->display->xres;
     u32 height = priv->display->yres;
@@ -279,29 +268,29 @@ static int ili9488_clear(struct ili9488_priv *priv, u16 clear)
     return 0;
 }
 
-static int ili9488_blank(struct ili9488_priv *priv, bool on)
+static int r61581_blank(struct r61581_priv *priv, bool on)
 {
     pr_debug("%s\n", __func__);
     return 0;
 }
 
-static int ili9488_sleep(struct ili9488_priv *priv, bool on)
+static int r61581_sleep(struct r61581_priv *priv, bool on)
 {
     pr_debug("%s\n", __func__);
     return 0;
 }
 
-static const struct ili9488_operations default_ili9488_ops = {
-    .init_display    = ili9488_init_display,
-    .reset           = ili9488_reset,
-    .clear           = ili9488_clear,
-    .blank           = ili9488_blank,
-    .sleep           = ili9488_sleep,
-    .set_var         = ili9488_set_var,
-    .set_addr_win    = ili9488_set_addr_win,
+static const struct r61581_operations default_r61581_ops = {
+    .init_display    = r61581_init_display,
+    .reset           = r61581_reset,
+    .clear           = r61581_clear,
+    .blank           = r61581_blank,
+    .sleep           = r61581_sleep,
+    .set_var         = r61581_set_var,
+    .set_addr_win    = r61581_set_addr_win,
 };
 
-static int ili9488_gpio_init(struct ili9488_priv *priv)
+static int r61581_gpio_init(struct r61581_priv *priv)
 {
     printf("initializing gpios...\n");
 
@@ -325,14 +314,14 @@ static int ili9488_gpio_init(struct ili9488_priv *priv)
     return 0;
 }
 
-static int ili9488_hw_init(struct ili9488_priv *priv)
+static int r61581_hw_init(struct r61581_priv *priv)
 {
     printf("initializing hardware...\n");
 
 #if DISP_OVER_PIO
     i80_pio_init(priv->gpio.db[0], ARRAY_SIZE(priv->gpio.db), priv->gpio.wr);
 #endif
-    ili9488_gpio_init(priv);
+    r61581_gpio_init(priv);
 
     priv->tftops->init_display(priv);
     /* clear screen to black */
@@ -341,27 +330,27 @@ static int ili9488_hw_init(struct ili9488_priv *priv)
     return 0;
 }
 
-static struct ili9488_display default_ili9488_display = {
-    .xres   = ILI9488_X_RES,
-    .yres   = ILI9488_Y_RES,
+static struct r61581_display default_r61581_display = {
+    .xres   = LCD_HOR_RES,
+    .yres   = LCD_VER_RES,
     .bpp    = 16,
     .rotate = 0,
 };
 
 /* ########### standalone ######## */
-static inline void ili9488_write_cmd(uint8_t cmd)
+static inline void r61581_write_cmd(uint8_t cmd)
 {
     write_buf_rs(&g_priv, &cmd, sizeof(cmd), 0);
 }
-#define write_cmd ili9488_write_cmd
-static inline void ili9488_write_data(uint8_t data)
+#define write_cmd r61581_write_cmd
+static inline void r61581_write_data(uint8_t data)
 {
     write_buf_rs(&g_priv, &data, sizeof(data), 1);
 }
-#define write_data ili9488_write_data
+#define write_data r61581_write_data
 
 #include "lvgl/lvgl.h"
-void ili9488_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_color_t * color_p)
+void r61581_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_color_t * color_p)
 {
     write_cmd(0x2A);
     write_data(area->x1 >> 8);
@@ -385,14 +374,14 @@ void ili9488_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_color_t 
 /* ########### standlone ######## */
 
 #define BUF_SIZE 64
-static int ili9488_probe(struct ili9488_priv *priv)
+static int r61581_probe(struct r61581_priv *priv)
 {
-    pr_debug("ili9488 probing ...\n");
+    pr_debug("r61581 probing ...\n");
 
     priv->buf = (u8 *)malloc(BUF_SIZE);
 
-    priv->display = &default_ili9488_display;
-    priv->tftops = &default_ili9488_ops;
+    priv->display = &default_r61581_display;
+    priv->tftops = &default_r61581_ops;
 
     priv->gpio.bl    = LCD_PIN_BL;
     priv->gpio.reset = LCD_PIN_RST;
@@ -404,13 +393,13 @@ static int ili9488_probe(struct ili9488_priv *priv)
     for (int i = LCD_PIN_DB_BASE; i < ARRAY_SIZE(priv->gpio.db); i++)
         priv->gpio.db[i] = i;
 
-    ili9488_hw_init(priv);
+    r61581_hw_init(priv);
 
     return 0;
 }
 
-int ili9488_driver_init(void)
+int r61581_driver_init(void)
 {
-    ili9488_probe(&g_priv);
+    r61581_probe(&g_priv);
     return 0;
 }

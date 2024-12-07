@@ -31,7 +31,7 @@ include(pico_sdk_import.cmake)
 include(pico_extras_import_optional.cmake)
 
 # set the project name
-project(pico_dm_gtm0375hi1t02 C CXX ASM)
+project(pico_dm_fpc032mra003_noos C CXX ASM)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
@@ -61,7 +61,7 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
 endif()
 
 # Set all global variables here
-set(OVERCLOCK_ENABLED 1)    # 1: enable, 0: disable
+set(OVERCLOCK_ENABLED 0)    # 1: enable, 0: disable
 
 if(OVERCLOCK_ENABLED)
 
@@ -135,7 +135,7 @@ set(LCD_HOR_RES 480)
 set(LCD_VER_RES 320)
 set(DISP_OVER_PIO 1) # 1: PIO, 0: GPIO
 set(PIO_USE_DMA   1)   # 1: use DMA, 0: not use DMA
-set(I80_BUS_WR_CLK_KHZ 80000)
+set(I80_BUS_WR_CLK_KHZ 40000)
 if(${PICO_BOARD} STREQUAL "pico" OR ${PICO_PLATFORM} STREQUAL "rp2040")
     math(EXPR MY_DISP_BUF_SIZE "${LCD_HOR_RES} * ${LCD_VER_RES} / 2")
 elseif(${PICO_BOARD} STREQUAL "pico2" OR ${PICO_PLATFORM} STREQUAL "rp2350")
@@ -164,7 +164,7 @@ target_link_libraries(lvgl PRIVATE pico_stdlib)
 # user define common source files
 file(GLOB_RECURSE COMMON_SOURCES
     main.c
-    ili9488.c
+    r61581.c
     ns2009.c
     porting/lv_port_disp_template.c
     porting/lv_port_indev_template.c

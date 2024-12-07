@@ -24,7 +24,6 @@
 #include "hardware/gpio.h"
 #include "hardware/i2c.h"
 
-#include "ili9488.h" /* where we get x,y resolution */
 #include "ns2009.h"
 
 #define pr_debug printf
@@ -238,24 +237,24 @@ static int ns2009_probe(struct ns2009_data *priv)
 
     priv->irq_pin     = NS2009_PIN_IRQ;
 
-    priv->tft_x_res = ILI9488_X_RES;
-    priv->tft_y_res = ILI9488_Y_RES;
+    priv->tft_x_res = LCD_HOR_RES;
+    priv->tft_y_res = LCD_VER_RES;
 
     priv->invert_x = false;
     priv->invert_y = false;
 
     priv->rtp_x_width = 80;
     priv->rtp_y_width = 54;
-    priv->rtp_x_res = 415;
-    priv->rtp_y_res = 285;
-    priv->rtp_x_offs = 5;
-    priv->rtp_y_offs = -20;
+    priv->rtp_x_res = 410;
+    priv->rtp_y_res = 275;
+    priv->rtp_x_offs = -25;
+    priv->rtp_y_offs = -25;
     priv->res = NS2009_RESOLUTION_8BIT;
 
     priv->rtp_x_sc = (float)((float)priv->tft_x_res / (float)priv->rtp_x_res);
     priv->rtp_y_sc = (float)((float)priv->tft_y_res / (float)priv->rtp_y_res);
 
-    priv->dir = NS2009_DIR_SWITCH_XY | NS2009_DIR_INVERT_Y;
+    priv->dir = NS2009_DIR_SWITCH_XY | NS2009_DIR_INVERT_Y | NS2009_DIR_INVERT_X;
 
     ns2009_hw_init(priv);
 

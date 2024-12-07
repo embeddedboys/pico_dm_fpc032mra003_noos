@@ -112,7 +112,7 @@ void lv_port_disp_init(void)
 
     /*Used to copy the buffer's content to the display*/
     // disp_drv.flush_cb = disp_flush;
-    disp_drv.flush_cb = ili9488_flush;
+    disp_drv.flush_cb = r61581_flush;
 
     /*Set a display buffer*/
     disp_drv.draw_buf = &draw_buf_dsc_1;
@@ -137,7 +137,7 @@ void lv_port_disp_init(void)
 static void disp_init(void)
 {
     /*You code here*/
-    ili9488_driver_init();
+    r61581_driver_init();
 }
 
 volatile bool disp_flush_enabled = true;
@@ -163,7 +163,7 @@ static void disp_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_colo
 {
     // if(disp_flush_enabled) {
         /*The most simple case (but also the slowest) to put all pixels to the screen one-by-one*/
-        ili9488_video_flush(
+        r61581_video_flush(
             area->x1,
             area->y1,
             area->x2,
