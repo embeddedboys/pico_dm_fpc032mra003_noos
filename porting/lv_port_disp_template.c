@@ -61,7 +61,7 @@ void lv_port_disp_init(void)
      * -----------------------------------*/
     disp = lv_display_create(MY_DISP_HOR_RES, MY_DISP_VER_RES);
     // lv_display_set_flush_cb(disp, disp_flush);
-    lv_display_set_flush_cb(disp, ili9488_flush);
+    lv_display_set_flush_cb(disp, r61581_flush);
 
 /* a half screen disp buffer */
 #ifndef MY_DISP_BUF_SIZE
@@ -97,7 +97,7 @@ void lv_port_disp_init(void)
 static void disp_init(void)
 {
     /*You code here*/
-    ili9488_driver_init();
+    r61581_driver_init();
 }
 
 volatile bool disp_flush_enabled = true;
@@ -123,7 +123,8 @@ void disp_disable_update(void)
 static void disp_flush(lv_display_t * disp_drv, const lv_area_t * area, uint8_t * px_map)
 {
     // if(disp_flush_enabled) {
-        ili9488_video_flush(
+        /*The most simple case (but also the slowest) to put all pixels to the screen one-by-one*/
+        r61581_video_flush(
             area->x1,
             area->y1,
             area->x2,

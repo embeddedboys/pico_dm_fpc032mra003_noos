@@ -77,7 +77,7 @@ int main(void)
     stdio_uart_init_full(uart0, 115200, 16, 17);
 
 
-    printf("\n\n\nPICO DM QD3503728 LVGL Porting\n");
+    printf("\n\n\nPICO DM FPC032MRA003 LVGL V9 Porting\n");
 
     lv_init();
     lv_port_disp_init();
@@ -97,10 +97,6 @@ int main(void)
     // lv_demo_scroll();
 
     /* measure weighted fps and opa speed */
-    // At 400MHz CPU / 100 MHz Flash
-    // Before : 348 94 45
-    // After  : 386 127 157
-    // Extreme : 413 153 214
     lv_demo_benchmark();
 
     /* This is a factory test app */
